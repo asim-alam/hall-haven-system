@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Mail, Phone, Users } from 'lucide-react';
 import { Student, ApplicationStatus } from '../../types';
 import { mockDataService } from '../../services/mockDataService';
 
