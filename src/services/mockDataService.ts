@@ -1,4 +1,3 @@
-
 import { Building, Room, Student, Application, MaintenanceRequest, Invoice, UserRole, RoomType, RoomStatus, ApplicationStatus, MaintenanceCategory, Priority, MaintenanceStatus, InvoiceStatus } from '../types';
 
 class MockDataService {
@@ -54,7 +53,7 @@ class MockDataService {
             currentOccupants: []
           });
         }
-      });
+      }
     });
     
     return rooms;
