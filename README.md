@@ -1,73 +1,191 @@
-# Welcome to your Lovable project
 
-## Project info
+# Hall Seat Management System
 
-**URL**: https://lovable.dev/projects/db14634d-3b6c-49e9-ba6c-20f607eab115
+A comprehensive web application for managing university hall accommodations, built with modern web technologies.
 
-## How can I edit this code?
+## 🏠 Project Overview
 
-There are several ways of editing your application.
+The Hall Seat Management System is a complete solution for managing student housing in university halls. It provides role-based access control, room management, application processing, maintenance tracking, and financial management.
 
-**Use Lovable**
+## ✨ Features Implemented (Phase 1)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/db14634d-3b6c-49e9-ba6c-20f607eab115) and start prompting.
+### 🔐 Authentication & User Management
+- Role-based login system with 6 user types:
+  - Super Admin
+  - Hall Admin  
+  - Finance Officer
+  - Maintenance Staff
+  - Student
+  - Report Viewer
+- Session management with automatic timeout
+- Demo accounts for easy testing
 
-Changes made via Lovable will be committed automatically to this repo.
+### 👥 Student Management
+- Comprehensive student profiles
+- Academic information tracking
+- Application status monitoring
+- Contact management
 
-**Use your preferred IDE**
+### 🏢 Room & Building Management
+- Multi-building support
+- Room categorization (Single, Double, Special Needs)
+- Real-time occupancy tracking
+- Room status management (Available, Occupied, Maintenance, Reserved)
+- Amenities and pricing management
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 📋 Maintenance Request System
+- Category-based request submission
+- Priority levels (Low, Medium, High, Urgent)
+- Status tracking workflow
+- Staff assignment capabilities
+- Student and staff interfaces
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 📊 Dashboard & Analytics
+- Role-specific dashboards
+- Real-time statistics
+- Occupancy rates and metrics
+- Financial summaries
 
-Follow these steps:
+## 🛠 Technical Stack
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Frontend
+- **React 18** with TypeScript
+- **Tailwind CSS** for styling
+- **Lucide React** for icons
+- **React Router** for navigation
+- **Tanstack Query** for state management
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Development Tools
+- **Vite** for build tooling
+- **ESLint** for code quality
+- **Git** for version control
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 🚀 Getting Started
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Prerequisites
+- Node.js 18+ and npm
+- Modern web browser
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd hall-management-system
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open your browser and navigate to `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 👤 Demo Accounts
 
-**Use GitHub Codespaces**
+Use these accounts to test different user roles:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+| Role | Email | Password |
+|------|-------|----------|
+| Super Admin | admin@university.edu | password123 |
+| Hall Admin | hall.admin@university.edu | password123 |
+| Finance Officer | finance@university.edu | password123 |
+| Maintenance Staff | maintenance@university.edu | password123 |
+| Student | student@university.edu | password123 |
 
-## What technologies are used for this project?
+## 📁 Project Structure
 
-This project is built with:
+```
+src/
+├── components/          # Reusable UI components
+│   ├── Auth/           # Authentication components
+│   ├── Dashboard/      # Dashboard components
+│   ├── Layout/         # Layout components
+│   ├── Students/       # Student management
+│   ├── Rooms/          # Room management
+│   └── MaintenanceRequests/ # Maintenance system
+├── services/           # Business logic services
+│   ├── authService.ts  # Authentication service
+│   └── mockDataService.ts # Mock data provider
+├── types/              # TypeScript type definitions
+└── pages/              # Page components
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🎯 Key Features by User Role
 
-## How can I deploy this project?
+### Super Admin / Hall Admin
+- Complete system oversight
+- Student and room management
+- Application processing
+- Maintenance coordination
+- Financial tracking
+- System configuration
 
-Simply open [Lovable](https://lovable.dev/projects/db14634d-3b6c-49e9-ba6c-20f607eab115) and click on Share -> Publish.
+### Finance Officer
+- Invoice management
+- Payment tracking
+- Financial reporting
+- Fee configuration
 
-## Can I connect a custom domain to my Lovable project?
+### Maintenance Staff
+- Task assignment and tracking
+- Room condition monitoring
+- Work order management
+- Status updates
 
-Yes, you can!
+### Students
+- Profile management
+- Room applications
+- Maintenance requests
+- Invoice viewing
+- Status tracking
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 📋 TODO (Future Phases)
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- [ ] Mobile responsive design improvements
+- [ ] External payment integration
+- [ ] Email notification system
+- [ ] Advanced reporting and analytics
+- [ ] Document management system
+- [ ] Check-in/Check-out workflows
+- [ ] IoT device integration
+- [ ] Real-time notifications
+- [ ] Advanced search and filtering
+- [ ] Bulk operations
+
+## 🔧 Backend Integration Notes
+
+This Phase 1 implementation uses mock data services. For production deployment:
+
+1. Replace mock services with actual Spring Boot backend
+2. Implement proper authentication with JWT tokens
+3. Add database integration (MySQL/PostgreSQL)
+4. Set up proper API endpoints
+5. Implement file upload capabilities
+6. Add email service integration
+
+## 📝 Development Guidelines
+
+- Follow TypeScript best practices
+- Use Tailwind CSS for consistent styling
+- Implement proper error handling
+- Write clean, documented code
+- Follow the established component structure
+- Use proper Git commit messages
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Write/update tests as needed
+5. Submit a pull request
+
+## 📄 License
+
+This project is developed for educational and institutional use.
