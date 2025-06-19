@@ -132,13 +132,7 @@ class SupabaseService {
       .from('rooms')
       .select(`
         *,
-        buildings (
-          id,
-          name,
-          address,
-          total_floors,
-          is_active
-        )
+        buildings (*)
       `)
       .order('room_number');
 
@@ -155,20 +149,10 @@ class SupabaseService {
       .from('maintenance_requests')
       .select(`
         *,
-        rooms (
-          id,
-          room_number,
-          building_id,
-          buildings (
-            name
-          )
+        rooms (*,
+          buildings (*)
         ),
-        students (
-          id,
-          first_name,
-          last_name,
-          email
-        )
+        students (*)
       `)
       .order('submitted_at', { ascending: false });
 
@@ -185,18 +169,8 @@ class SupabaseService {
       .from('applications')
       .select(`
         *,
-        students (
-          id,
-          first_name,
-          last_name,
-          email,
-          student_id,
-          department
-        ),
-        buildings (
-          id,
-          name
-        )
+        students (*),
+        buildings (*)
       `)
       .order('application_date', { ascending: false });
 
@@ -213,20 +187,9 @@ class SupabaseService {
       .from('invoices')
       .select(`
         *,
-        students (
-          id,
-          first_name,
-          last_name,
-          email,
-          student_id
-        ),
-        rooms (
-          id,
-          room_number,
-          building_id,
-          buildings (
-            name
-          )
+        students (*),
+        rooms (*,
+          buildings (*)
         )
       `)
       .order('generated_at', { ascending: false });
@@ -244,21 +207,9 @@ class SupabaseService {
       .from('room_assignments')
       .select(`
         *,
-        students (
-          id,
-          first_name,
-          last_name,
-          email,
-          student_id
-        ),
-        rooms (
-          id,
-          room_number,
-          building_id,
-          type,
-          buildings (
-            name
-          )
+        students (*),
+        rooms (*,
+          buildings (*)
         )
       `)
       .eq('is_active', true)
