@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { User, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { authService } from '../../services/authService';
+import { supabase } from '../../integrations/supabase/client';
 
 interface LoginFormProps {
   onLoginSuccess: (user: any) => void;
@@ -15,6 +15,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,15 +23,36 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     setError('');
 
     try {
-      const result = await authService.login(formData.email, formData.password);
-      
-      if (result.success && result.user) {
-        onLoginSuccess(result.user);
+      if (isSignUp) {
+        const { data, error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+
+        if (error) {
+          setError(error.message);
+        } else if (data.user) {
+          console.log('Sign up successful:', data.user.email);
+          onLoginSuccess(data.user);
+        }
       } else {
-        setError(result.error || 'Login failed');
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password
+        });
+
+        if (error) {
+          setError(error.message);
+        } else if (data.user) {
+          console.log('Login successful:', data.user.email);
+          onLoginSuccess(data.user);
+        }
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -64,7 +86,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
           <h1 className="text-2xl font-bold">Hall Management System</h1>
-          <p className="text-blue-100 mt-2">Sign in to your account</p>
+          <p className="text-blue-100 mt-2">{isSignUp ? 'Create your account' : 'Sign in to your account'}</p>
         </div>
 
         {/* Form */}
@@ -123,9 +145,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (isSignUp ? 'Creating Account...' : 'Signing in...') : (isSignUp ? 'Create Account' : 'Sign In')}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-blue-600 hover:text-blue-700 text-sm"
+            >
+              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+            </button>
+          </div>
 
           {/* Demo Accounts */}
           <div className="mt-6 pt-6 border-t border-gray-200">
