@@ -10,7 +10,10 @@ interface LoginFormProps {
 const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    firstName: '',
+    lastName: '',
+    role: 'STUDENT'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -28,15 +31,30 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
           email: formData.email,
           password: formData.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              role: formData.role
+            }
           }
         });
 
         if (error) {
           setError(error.message);
         } else if (data.user) {
-          console.log('Sign up successful:', data.user.email);
-          onLoginSuccess(data.user);
+          // For demo purposes, we'll sign in immediately after signup
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password
+          });
+          
+          if (!signInError) {
+            console.log('Sign up and login successful:', data.user.email);
+            onLoginSuccess(data.user);
+          } else {
+            setError('Account created but login failed. Please try logging in manually.');
+          }
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -58,40 +76,60 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError(''); // Clear error when user starts typing
+    setError('');
   };
 
-  const handleDemoLogin = async (email: string) => {
-    setFormData({ email, password: 'password123' });
+  const handleDemoLogin = async (email: string, role: string) => {
     setLoading(true);
     setError('');
 
     try {
-      // First try to sign up the user (in case they don't exist)
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password: 'password123',
-        options: {
-          emailRedirectTo: `${window.location.origin}/`
-        }
-      });
-
-      // Then try to sign in (whether they existed or were just created)
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      // Try to sign in first
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password: 'password123'
       });
 
-      if (signInError) {
-        setError(`Login failed: ${signInError.message}`);
-      } else if (data.user) {
-        console.log('Demo login successful:', data.user.email);
-        onLoginSuccess(data.user);
+      if (!signInError && signInData.user) {
+        console.log('Demo login successful:', signInData.user.email);
+        onLoginSuccess(signInData.user);
+        return;
+      }
+
+      // If sign in fails, try to create the account
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: 'password123',
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            first_name: role.split(' ')[0],
+            last_name: role.split(' ')[1] || 'User',
+            role: role.replace(' ', '_').toUpperCase()
+          }
+        }
+      });
+
+      if (!signUpError && signUpData.user) {
+        // Try to sign in again after creating account
+        const { data: finalSignIn, error: finalSignInError } = await supabase.auth.signInWithPassword({
+          email,
+          password: 'password123'
+        });
+
+        if (!finalSignInError && finalSignIn.user) {
+          console.log('Demo account created and logged in:', finalSignIn.user.email);
+          onLoginSuccess(finalSignIn.user);
+        } else {
+          setError('Demo account created but login failed. Please try logging in manually.');
+        }
+      } else {
+        setError(`Demo login failed: ${signUpError?.message || 'Unknown error'}`);
       }
     } catch (err: any) {
       setError(err.message || 'Demo login failed');
@@ -150,6 +188,61 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
               />
             </div>
 
+            {isSignUp && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      placeholder="First name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      placeholder="Last name"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                    Role
+                  </label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  >
+                    <option value="STUDENT">Student</option>
+                    <option value="HALL_ADMIN">Hall Admin</option>
+                    <option value="FINANCE_OFFICER">Finance Officer</option>
+                    <option value="MAINTENANCE_STAFF">Maintenance Staff</option>
+                    <option value="SUPER_ADMIN">Super Admin</option>
+                  </select>
+                </div>
+              </>
+            )}
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
@@ -200,7 +293,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
               {demoAccounts.map((account, index) => (
                 <button
                   key={index}
-                  onClick={() => handleDemoLogin(account.email)}
+                  onClick={() => handleDemoLogin(account.email, account.role)}
                   disabled={loading}
                   className="w-full text-left px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 rounded border transition-colors disabled:opacity-50"
                 >

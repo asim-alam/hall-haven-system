@@ -16,43 +16,85 @@ import LoginForm from './components/Auth/LoginForm';
 import { UserRole } from './types';
 import './App.css';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  isActive: boolean;
+  createdAt: string;
+}
+
 function App() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+
+      return {
+        id: data.id,
+        email: data.email,
+        firstName: data.first_name || '',
+        lastName: data.last_name || '',
+        role: data.role as UserRole,
+        isActive: data.is_active,
+        createdAt: data.created_at
+      };
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          setUserProfile(profile);
+        } else {
+          setUserProfile(null);
+        }
+        
         setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user.id);
+        setUserProfile(profile);
+      }
+      
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
-  // Mock current user for demo - in a real app this would come from the profiles table
-  const currentUser = user ? {
-    id: user.id,
-    email: user.email || 'admin@university.edu',
-    firstName: 'Demo',
-    lastName: 'User',
-    role: UserRole.SUPER_ADMIN,
-    isActive: true,
-    createdAt: '2024-01-01T00:00:00Z'
-  } : null;
 
   const handleLogout = async () => {
     try {
@@ -64,6 +106,7 @@ function App() {
         console.log('Logout successful');
         setUser(null);
         setSession(null);
+        setUserProfile(null);
         setActiveSection('dashboard');
       }
     } catch (error) {
@@ -109,7 +152,7 @@ function App() {
     );
   }
 
-  if (!user || !currentUser) {
+  if (!user || !userProfile) {
     return <LoginForm onLoginSuccess={handleLoginSuccess} />;
   }
 
@@ -117,7 +160,7 @@ function App() {
     <Router>
       <div className="flex h-screen bg-gray-50">
         <Sidebar
-          user={currentUser}
+          user={userProfile}
           activeSection={activeSection}
           onSectionChange={setActiveSection}
           onLogout={handleLogout}
