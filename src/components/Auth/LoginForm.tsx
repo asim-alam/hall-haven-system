@@ -66,13 +66,48 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     setError(''); // Clear error when user starts typing
   };
 
+  const handleDemoLogin = async (email: string) => {
+    setFormData({ email, password: 'password123' });
+    setLoading(true);
+    setError('');
+
+    try {
+      // First try to sign up the user (in case they don't exist)
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: 'password123',
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      // Then try to sign in (whether they existed or were just created)
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: 'password123'
+      });
+
+      if (signInError) {
+        setError(`Login failed: ${signInError.message}`);
+      } else if (data.user) {
+        console.log('Demo login successful:', data.user.email);
+        onLoginSuccess(data.user);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Demo login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Demo accounts for easy testing
   const demoAccounts = [
     { email: 'admin@university.edu', role: 'Super Admin' },
     { email: 'hall.admin@university.edu', role: 'Hall Admin' },
     { email: 'finance@university.edu', role: 'Finance Officer' },
     { email: 'maintenance@university.edu', role: 'Maintenance Staff' },
-    { email: 'student@university.edu', role: 'Student' }
+    { email: 'student@university.edu', role: 'Student' },
+    { email: 'student1@gmail.com', role: 'Student' }
   ];
 
   return (
@@ -160,13 +195,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
 
           {/* Demo Accounts */}
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts:</p>
+            <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts (Click to auto-login):</p>
             <div className="space-y-2">
               {demoAccounts.map((account, index) => (
                 <button
                   key={index}
-                  onClick={() => setFormData({ email: account.email, password: 'password123' })}
-                  className="w-full text-left px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 rounded border transition-colors"
+                  onClick={() => handleDemoLogin(account.email)}
+                  disabled={loading}
+                  className="w-full text-left px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 rounded border transition-colors disabled:opacity-50"
                 >
                   <div className="font-medium text-gray-800">{account.role}</div>
                   <div className="text-gray-600">{account.email}</div>
