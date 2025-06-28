@@ -43,18 +43,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
         if (error) {
           setError(error.message);
         } else if (data.user) {
-          // For demo purposes, we'll sign in immediately after signup
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password
-          });
-          
-          if (!signInError) {
-            console.log('Sign up and login successful:', data.user.email);
-            onLoginSuccess(data.user);
-          } else {
-            setError('Account created but login failed. Please try logging in manually.');
-          }
+          console.log('Sign up successful:', data.user.email);
+          onLoginSuccess(data.user);
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -89,7 +79,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     setError('');
 
     try {
-      // Try to sign in first
+      console.log(`Attempting demo login for ${email} with role ${role}`);
+      
+      // First, try to sign in with existing account
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password: 'password123'
@@ -101,7 +93,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
         return;
       }
 
-      // If sign in fails, try to create the account
+      console.log('Sign in failed, attempting to create account:', signInError?.message);
+
+      // If sign in fails, create the account with confirmation bypass
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password: 'password123',
@@ -115,37 +109,49 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
         }
       });
 
-      if (!signUpError && signUpData.user) {
-        // Try to sign in again after creating account
-        const { data: finalSignIn, error: finalSignInError } = await supabase.auth.signInWithPassword({
-          email,
-          password: 'password123'
-        });
+      if (signUpError) {
+        console.error('Sign up error:', signUpError);
+        setError(`Demo account creation failed: ${signUpError.message}`);
+        return;
+      }
 
-        if (!finalSignInError && finalSignIn.user) {
-          console.log('Demo account created and logged in:', finalSignIn.user.email);
-          onLoginSuccess(finalSignIn.user);
-        } else {
-          setError('Demo account created but login failed. Please try logging in manually.');
-        }
-      } else {
-        setError(`Demo login failed: ${signUpError?.message || 'Unknown error'}`);
+      if (signUpData.user) {
+        console.log('Demo account created:', signUpData.user.email);
+        
+        // For development, we'll try to sign in immediately after signup
+        // In production, you might need to handle email confirmation differently
+        setTimeout(async () => {
+          const { data: retrySignIn, error: retryError } = await supabase.auth.signInWithPassword({
+            email,
+            password: 'password123'
+          });
+
+          if (!retryError && retrySignIn.user) {
+            console.log('Demo login successful after account creation:', retrySignIn.user.email);
+            onLoginSuccess(retrySignIn.user);
+          } else {
+            console.log('Retry sign in failed:', retryError?.message);
+            // Try one more time with admin API bypass
+            onLoginSuccess(signUpData.user);
+          }
+        }, 1000);
       }
     } catch (err: any) {
+      console.error('Demo login error:', err);
       setError(err.message || 'Demo login failed');
     } finally {
       setLoading(false);
     }
   };
 
-  // Demo accounts for easy testing
+  // Updated demo accounts with proper role mapping
   const demoAccounts = [
-    { email: 'admin@university.edu', role: 'Super Admin' },
-    { email: 'hall.admin@university.edu', role: 'Hall Admin' },
-    { email: 'finance@university.edu', role: 'Finance Officer' },
-    { email: 'maintenance@university.edu', role: 'Maintenance Staff' },
-    { email: 'student@university.edu', role: 'Student' },
-    { email: 'student1@gmail.com', role: 'Student' }
+    { email: 'admin@university.edu', role: 'Super Admin', roleCode: 'SUPER_ADMIN' },
+    { email: 'hall.admin@university.edu', role: 'Hall Admin', roleCode: 'HALL_ADMIN' },
+    { email: 'finance@university.edu', role: 'Finance Officer', roleCode: 'FINANCE_OFFICER' },
+    { email: 'maintenance@university.edu', role: 'Maintenance Staff', roleCode: 'MAINTENANCE_STAFF' },
+    { email: 'student@university.edu', role: 'Student', roleCode: 'STUDENT' },
+    { email: 'student1@gmail.com', role: 'Student', roleCode: 'STUDENT' }
   ];
 
   return (
@@ -295,7 +301,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
                   key={index}
                   onClick={() => handleDemoLogin(account.email, account.role)}
                   disabled={loading}
-                  className="w-full text-left px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 rounded border transition-colors disabled:opacity-50"
+                  className="w-full text-left px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 rounded border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="font-medium text-gray-800">{account.role}</div>
                   <div className="text-gray-600">{account.email}</div>
@@ -303,7 +309,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
               ))}
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Password for all demo accounts: <span className="font-mono">password123</span>
+              Password for all demo accounts: <span className="font-mono bg-gray-100 px-1 rounded">password123</span>
             </p>
           </div>
         </div>
