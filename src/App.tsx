@@ -26,96 +26,78 @@ interface UserProfile {
   createdAt: string;
 }
 
+// Mock users for temporary bypass
+const mockUsers: UserProfile[] = [
+  {
+    id: '1',
+    email: 'admin@university.edu',
+    firstName: 'John',
+    lastName: 'Admin',
+    role: 'SUPER_ADMIN' as UserRole,
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '2',
+    email: 'hall.admin@university.edu',
+    firstName: 'Sarah',
+    lastName: 'Hall',
+    role: 'HALL_ADMIN' as UserRole,
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '3',
+    email: 'finance@university.edu',
+    firstName: 'Mike',
+    lastName: 'Finance',
+    role: 'FINANCE_OFFICER' as UserRole,
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '4',
+    email: 'maintenance@university.edu',
+    firstName: 'Tom',
+    lastName: 'Maintenance',
+    role: 'MAINTENANCE_STAFF' as UserRole,
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '5',
+    email: 'student@university.edu',
+    firstName: 'Alice',
+    lastName: 'Student',
+    role: 'STUDENT' as UserRole,
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '6',
+    email: 'student1@gmail.com',
+    firstName: 'Bob',
+    lastName: 'Johnson',
+    role: 'STUDENT' as UserRole,
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z'
+  }
+];
+
 function App() {
   const [activeSection, setActiveSection] = useState('dashboard');
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
-      }
-
-      return {
-        id: data.id,
-        email: data.email,
-        firstName: data.first_name || '',
-        lastName: data.last_name || '',
-        role: data.role as UserRole,
-        isActive: data.is_active,
-        createdAt: data.created_at
-      };
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
+  const handleUserSelect = (selectedUser: UserProfile) => {
+    console.log('Switching to user:', selectedUser.email, 'Role:', selectedUser.role);
+    setUserProfile(selectedUser);
   };
 
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          setUserProfile(profile);
-        } else {
-          setUserProfile(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        setUserProfile(profile);
-      }
-      
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      console.log('Logging out...');
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Logout error:', error);
-      } else {
-        console.log('Logout successful');
-        setUser(null);
-        setSession(null);
-        setUserProfile(null);
-        setActiveSection('dashboard');
-      }
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
-  const handleLoginSuccess = (loggedInUser: User) => {
-    setUser(loggedInUser);
+  const handleLogout = () => {
+    console.log('Logging out...');
+    setUserProfile(null);
+    setActiveSection('dashboard');
   };
 
   const renderContent = () => {
@@ -152,8 +134,8 @@ function App() {
     );
   }
 
-  if (!user || !userProfile) {
-    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
+  if (!userProfile) {
+    return <LoginForm onLoginSuccess={handleUserSelect} mockUsers={mockUsers} />;
   }
 
   return (
